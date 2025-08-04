@@ -1,0 +1,16 @@
+# PDP Analysis Dashboard
+
+🚀 **LIVE DEMO**: This dashboard tracks n8n workflow execution in real-time
+
+## Features
+- Real-time progress tracking
+- Beautiful glassmorphism UI
+- Mobile responsive design
+- Ready for n8n integration
+
+## Test the Dashboard
+Enter any Amazon or Walmart URL and click "Start Analysis" to see the progress simulation.
+
+---
+**Repository**: https://github.com/xclv-ai/pdp-analysis-dashboard  
+**Built with**: HTML, CSS, JavaScript

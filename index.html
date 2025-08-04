@@ -552,6 +552,25 @@
             transform: translateY(-1px);
         }
 
+        .webhook-status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .webhook-status.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--success);
+        }
+
+        .webhook-status.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--error);
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -625,7 +644,7 @@
     <div class="dashboard">
         <div class="header">
             <h1>PDP Analysis Dashboard</h1>
-            <p>Comprehensive product detail page analysis with real-time progress tracking</p>
+            <p>Comprehensive product detail page analysis with real-time n8n workflow tracking</p>
         </div>
 
         <div class="url-input-section slide-in">
@@ -673,6 +692,8 @@
                 <!-- Steps will be populated dynamically -->
             </div>
 
+            <div id="webhook-status" class="webhook-status" style="display: none;"></div>
+
             <button class="analysis-output-btn" id="analysis-output-btn" style="display: none;">
                 📊 View Analysis Output
             </button>
@@ -704,6 +725,7 @@
                 this.pollInterval = null;
                 this.executionId = null;
                 this.analyzedUrl = null;
+                this.webhookUrl = 'https://xclv.app.n8n.cloud/webhook/f52ce650-8c2c-41ac-be01-96d0f00d0425';
                 
                 this.steps = [
                     {
@@ -843,7 +865,7 @@
                 this.renderProgressSteps();
                 this.startTimer();
                 
-                // Simulate workflow execution
+                // Execute real n8n workflow
                 try {
                     await this.executeWorkflow(url, options);
                 } catch (error) {
@@ -913,9 +935,58 @@
             }
 
             async executeWorkflow(url, options) {
-                // Simulate the actual n8n workflow execution
-                // In a real implementation, this would call your n8n webhook or REST API
-                
+                // Prepare payload for n8n webhook
+                const payload = {
+                    url: url,
+                    options: options,
+                    timestamp: new Date().toISOString()
+                };
+
+                // Show webhook status
+                const statusElement = document.getElementById('webhook-status');
+                statusElement.style.display = 'block';
+                statusElement.className = 'webhook-status';
+                statusElement.textContent = '🔄 Sending request to n8n workflow...';
+
+                try {
+                    // Call n8n webhook
+                    const response = await fetch(this.webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        statusElement.className = 'webhook-status success';
+                        statusElement.textContent = '✅ n8n workflow started successfully!';
+                        
+                        // Start simulated progress tracking
+                        await this.simulateProgressTracking();
+                        
+                        // Show results
+                        this.showResults(result);
+                        
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                } catch (error) {
+                    console.error('Webhook error:', error);
+                    statusElement.className = 'webhook-status error';
+                    statusElement.textContent = `❌ Error: ${error.message}`;
+                    
+                    // Fall back to simulation mode
+                    statusElement.textContent += ' - Running in simulation mode...';
+                    await this.simulateProgressTracking();
+                    this.showResults();
+                }
+            }
+
+            async simulateProgressTracking() {
+                // Simulate progress tracking until we have real-time updates from n8n
                 for (let i = 0; i < this.steps.length; i++) {
                     await this.executeStep(i);
                     this.updateProgress();
@@ -924,8 +995,6 @@
                     const delay = Math.random() * 3000 + 2000; // 2-5 seconds
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
-
-                this.showResults();
             }
 
             async executeStep(stepIndex) {
@@ -953,15 +1022,14 @@
                         statusBadge.textContent = 'Running';
                         statusBadge.className = 'status-badge active';
                         
-                        // Simulate substep processing time (with chance of error for demo)
+                        // Simulate substep processing time
                         const processingTime = 1500 + Math.random() * 3000;
                         await new Promise(resolve => setTimeout(resolve, processingTime));
                         
-                        // Randomly simulate success or error (90% success rate)
-                        const isSuccess = Math.random() > 0.1;
+                        // Mark substep as completed (95% success rate)
+                        const isSuccess = Math.random() > 0.05;
                         
                         if (isSuccess) {
-                            // Mark substep as completed
                             substepElement.classList.remove('active');
                             substepElement.classList.add('completed');
                             substepIcon.classList.remove('active');
@@ -969,7 +1037,6 @@
                             statusBadge.textContent = 'Finished';
                             statusBadge.className = 'status-badge completed';
                         } else {
-                            // Mark substep as error
                             substepElement.classList.remove('active');
                             substepElement.classList.add('error');
                             substepIcon.classList.remove('active');
@@ -1022,8 +1089,15 @@
                 return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
 
-            showResults() {
+            showResults(workflowResult = null) {
                 clearInterval(this.timerInterval);
+                
+                // Update status if we got real results
+                if (workflowResult) {
+                    const statusElement = document.getElementById('webhook-status');
+                    statusElement.className = 'webhook-status success';
+                    statusElement.textContent = '🎉 Workflow completed successfully!';
+                }
                 
                 // Show the "View Analysis Output" button
                 document.getElementById('analysis-output-btn').style.display = 'flex';
@@ -1099,9 +1173,10 @@
 
             showError(message) {
                 clearInterval(this.timerInterval);
-                alert(message);
-                // Reset to initial state
-                location.reload();
+                const statusElement = document.getElementById('webhook-status');
+                statusElement.style.display = 'block';
+                statusElement.className = 'webhook-status error';
+                statusElement.textContent = `❌ Error: ${message}`;
             }
         }
 

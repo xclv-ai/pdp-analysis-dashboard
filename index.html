@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDP Analysis Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400..700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border: #374151;
+            --glass: rgba(255, 255, 255, 0.05);
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: "Kode Mono", monospace;
+            font-optical-sizing: auto;
+            font-weight: 400;
+            font-style: normal;
+            background: linear-gradient(135deg, var(--background) 0%, #1a202c 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .url-input-section {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-wrapper {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .option:hover {
+            background: var(--surface-light);
+        }
+
+        .option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .progress-section {
+            display: none;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .progress-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .overall-progress {
+            background: var(--surface);
+            border-radius: 12px;
+            height: 8px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .overall-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.6s ease;
+        }
+
+        .progress-steps {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .step {
+            display: block;
+            padding: 1.5rem;
+            background: var(--surface);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+
+        .step.active {
+            opacity: 1;
+            background: var(--surface-light);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+        }
+
+        .step.completed {
+            opacity: 1;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .step.error {
+            opacity: 1;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .step-icon.pending {
+            background: var(--surface-light);
+            color: var(--text-muted);
+        }
+
+        .step-icon.active {
+            background: var(--primary);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .step-icon.completed {
+            background: var(--success);
+            color: white;
+        }
+
+        .step-icon.error {
+            background: var(--error);
+            color: white;
+        }
+
+        .step-main-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .step-time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: auto;
+            align-self: flex-start;
+        }
+
+        .substeps {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .substep {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            opacity: 0.4;
+        }
+
+        .substep.active {
+            opacity: 1;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .substep.completed {
+            opacity: 1;
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .substep.error {
+            opacity: 1;
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .substep-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .substep-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            background: var(--surface);
+            color: var(--text-muted);
+        }
+
+        .substep-icon.active {
+            background: var(--primary);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .substep-icon.completed {
+            background: var(--success);
+            color: white;
+        }
+
+        .substep-icon.error {
+            background: var(--error);
+            color: white;
+        }
+
+        .substep-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .substep-title {
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .substep-description {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .substep-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-badge.pending {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--text-muted);
+        }
+
+        .status-badge.active {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+        }
+
+        .status-badge.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .status-badge.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+
+        .substep-time {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
+        .analysis-complete-section {
+            display: none;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .analyzed-url {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: var(--surface);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .analyzed-url-icon {
+            font-size: 1.5rem;
+        }
+
+        .analyzed-url-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .analyzed-url-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .analyzed-url-text {
+            font-weight: 500;
+            word-break: break-all;
+            color: var(--text-primary);
+        }
+
+        .analysis-output-btn {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+            margin-top: 2rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .analysis-output-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .result-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            background: var(--surface-light);
+            transform: translateY(-2px);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+        }
+
+        .result-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--success);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-particles" id="particles"></div>
+    
+    <div class="dashboard">
+        <div class="header">
+            <h1>PDP Analysis Dashboard</h1>
+            <p>Comprehensive product detail page analysis with real-time progress tracking</p>
+        </div>
+
+        <div class="url-input-section slide-in">
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <label for="url-input">Product URL</label>
+                    <input type="url" id="url-input" placeholder="https://www.walmart.com/ip/product-name/123456789" />
+                </div>
+                <button class="analyze-btn" id="analyze-btn">
+                    🚀 Start Analysis
+                </button>
+            </div>
+
+            <div class="options">
+                <div class="option">
+                    <input type="checkbox" id="base-content" checked />
+                    <label for="base-content">Base Content Analysis</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="premium-content" checked />
+                    <label for="premium-content">About Brand Content</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="video-content" checked />
+                    <label for="video-content">Video Analysis</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="gallery-images" checked />
+                    <label for="gallery-images">Gallery Images</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-section" id="progress-section">
+            <div class="progress-header">
+                <h2 class="progress-title">Analysis in Progress...</h2>
+                <div class="step-time" id="elapsed-time">00:00</div>
+            </div>
+            
+            <div class="overall-progress">
+                <div class="overall-progress-fill" id="overall-progress"></div>
+            </div>
+
+            <div class="progress-steps" id="progress-steps">
+                <!-- Steps will be populated dynamically -->
+            </div>
+
+            <button class="analysis-output-btn" id="analysis-output-btn" style="display: none;">
+                📊 View Analysis Output
+            </button>
+        </div>
+
+        <div class="analysis-complete-section" id="analysis-complete-section">
+            <div class="analyzed-url" id="analyzed-url">
+                <div class="analyzed-url-icon">🔗</div>
+                <div class="analyzed-url-content">
+                    <div class="analyzed-url-label">Analyzed URL</div>
+                    <div class="analyzed-url-text" id="analyzed-url-text"><!-- URL will be populated --></div>
+                </div>
+            </div>
+            
+            <h2>Analysis Complete! 🎉</h2>
+            <div class="results-grid" id="results-grid">
+                <!-- Results will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PDPAnalysisDashboard {
+            constructor() {
+                this.currentStep = 0;
+                this.totalSteps = 0;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.pollInterval = null;
+                this.executionId = null;
+                this.analyzedUrl = null;
+                
+                this.steps = [
+                    {
+                        id: 'url-validation',
+                        title: 'URL Validation',
+                        description: 'Validating and classifying the product URL',
+                        icon: '🔍'
+                    },
+                    {
+                        id: 'folder-creation',
+                        title: 'Folder Setup',
+                        description: 'Creating Google Drive folders for analysis',
+                        icon: '📁'
+                    },
+                    {
+                        id: 'platform-detection',
+                        title: 'Platform Detection',
+                        description: 'Identifying Amazon/Walmart platform',
+                        icon: '🏪'
+                    },
+                    {
+                        id: 'content-scraping',
+                        title: 'Content Scraping',
+                        description: 'Extracting product information and content',
+                        icon: '🕷️',
+                        substeps: [
+                            { id: 'base-content', title: 'Base Content', description: 'Core product information and specifications', icon: '📄' },
+                            { id: 'brand-story', title: 'Brand Story Section', description: 'Brand narrative and story content', icon: '📖' },
+                            { id: 'product-description', title: 'Product Description', description: 'Detailed product descriptions', icon: '📝' },
+                            { id: 'sustainability-focus', title: 'Sustainability Section', description: 'Environmental and sustainability claims', icon: '🌱' }
+                        ]
+                    },
+                    {
+                        id: 'image-analysis',
+                        title: 'Visual Analysis',
+                        description: 'Analyzing product images and gallery',
+                        icon: '🖼️'
+                    },
+                    {
+                        id: 'video-processing',
+                        title: 'Video Processing',
+                        description: 'Processing and analyzing product videos',
+                        icon: '🎥'
+                    },
+                    {
+                        id: 'ai-analysis',
+                        title: 'AI Analysis',
+                        description: 'Running AI-powered content analysis',
+                        icon: '🧠',
+                        substeps: [
+                            { id: 'pdp-brand-perception', title: 'PDP Brand Perception', description: 'Analyzing brand perception from product page', icon: '🎯' },
+                            { id: 'target-brand-perception', title: 'Target Brand Perception', description: 'Evaluating official brand channels perception', icon: '📊' }
+                        ]
+                    },
+                    {
+                        id: 'brand-perception',
+                        title: 'Brand Perception',
+                        description: 'Analyzing brand perception gaps',
+                        icon: '💭'
+                    },
+                    {
+                        id: 'ratings-reviews',
+                        title: 'Ratings & Reviews Analysis',
+                        description: 'Analyzing customer ratings and reviews',
+                        icon: '⭐'
+                    },
+                    {
+                        id: 'report-generation',
+                        title: 'Report Generation',
+                        description: 'Compiling final analysis report',
+                        icon: '📊'
+                    },
+                    {
+                        id: 'file-sharing',
+                        title: 'File Sharing',
+                        description: 'Making results accessible for download',
+                        icon: '🔗'
+                    }
+                ];
+
+                this.init();
+            }
+
+            init() {
+                this.createFloatingParticles();
+                this.bindEvents();
+                this.totalSteps = this.steps.length;
+            }
+
+            createFloatingParticles() {
+                const particlesContainer = document.getElementById('particles');
+                for (let i = 0; i < 20; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+                    particle.style.animationDelay = Math.random() * 15 + 's';
+                    particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                    particlesContainer.appendChild(particle);
+                }
+            }
+
+            bindEvents() {
+                document.getElementById('analyze-btn').addEventListener('click', () => this.startAnalysis());
+                document.getElementById('url-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.startAnalysis();
+                });
+                document.getElementById('analysis-output-btn').addEventListener('click', () => this.showAnalysisOutput());
+            }
+
+            async startAnalysis() {
+                const urlInput = document.getElementById('url-input');
+                const url = urlInput.value.trim();
+                
+                if (!url) {
+                    alert('Please enter a valid product URL');
+                    return;
+                }
+
+                if (!this.isValidUrl(url)) {
+                    alert('Please enter a valid Amazon or Walmart product URL');
+                    return;
+                }
+
+                // Store the analyzed URL
+                this.analyzedUrl = url;
+
+                // Get analysis options
+                const options = {
+                    base_content: document.getElementById('base-content').checked,
+                    premium_content: document.getElementById('premium-content').checked,
+                    video_content: document.getElementById('video-content').checked,
+                    gallery_images: document.getElementById('gallery-images').checked
+                };
+
+                this.showProgressSection();
+                this.renderProgressSteps();
+                this.startTimer();
+                
+                // Simulate workflow execution
+                try {
+                    await this.executeWorkflow(url, options);
+                } catch (error) {
+                    console.error('Analysis failed:', error);
+                    this.showError('Analysis failed. Please try again.');
+                }
+            }
+
+            isValidUrl(url) {
+                return url.includes('walmart.com') || url.includes('amazon.com');
+            }
+
+            showProgressSection() {
+                document.querySelector('.url-input-section').style.display = 'none';
+                document.getElementById('progress-section').style.display = 'block';
+                document.getElementById('progress-section').classList.add('slide-in');
+            }
+
+            renderProgressSteps() {
+                const stepsContainer = document.getElementById('progress-steps');
+                stepsContainer.innerHTML = '';
+
+                this.steps.forEach((step, index) => {
+                    const stepElement = document.createElement('div');
+                    stepElement.className = 'step';
+                    stepElement.id = `step-${step.id}`;
+                    
+                    let substepsHtml = '';
+                    if (step.substeps) {
+                        substepsHtml = `
+                            <div class="substeps" id="substeps-${step.id}">
+                                ${step.substeps.map(substep => `
+                                    <div class="substep" id="substep-${substep.id}">
+                                        <div class="substep-left">
+                                            <div class="substep-icon">${substep.icon}</div>
+                                            <div class="substep-content">
+                                                <div class="substep-title">${substep.title}</div>
+                                                <div class="substep-description">${substep.description}</div>
+                                            </div>
+                                        </div>
+                                        <div class="substep-status">
+                                            <div class="status-badge pending" id="status-${substep.id}">Pending</div>
+                                            <div class="substep-time" id="time-${substep.id}"></div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    stepElement.innerHTML = `
+                        <div class="step-header">
+                            <div class="step-icon pending">
+                                ${step.icon}
+                            </div>
+                            <div class="step-main-content">
+                                <div class="step-title">${step.title}</div>
+                                <div class="step-description">${step.description}</div>
+                            </div>
+                            <div class="step-time"></div>
+                        </div>
+                        ${substepsHtml}
+                    `;
+                    
+                    stepsContainer.appendChild(stepElement);
+                });
+            }
+
+            async executeWorkflow(url, options) {
+                // Simulate the actual n8n workflow execution
+                // In a real implementation, this would call your n8n webhook or REST API
+                
+                for (let i = 0; i < this.steps.length; i++) {
+                    await this.executeStep(i);
+                    this.updateProgress();
+                    
+                    // Random delay to simulate real processing time
+                    const delay = Math.random() * 3000 + 2000; // 2-5 seconds
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+
+                this.showResults();
+            }
+
+            async executeStep(stepIndex) {
+                const step = this.steps[stepIndex];
+                const stepElement = document.getElementById(`step-${step.id}`);
+                const icon = stepElement.querySelector('.step-icon');
+                
+                // Set step as active
+                stepElement.classList.add('active');
+                icon.classList.remove('pending');
+                icon.classList.add('active');
+                
+                // If step has substeps, execute them one by one
+                if (step.substeps) {
+                    for (let i = 0; i < step.substeps.length; i++) {
+                        const substep = step.substeps[i];
+                        const substepElement = document.getElementById(`substep-${substep.id}`);
+                        const substepIcon = substepElement.querySelector('.substep-icon');
+                        const statusBadge = document.getElementById(`status-${substep.id}`);
+                        const timeElement = document.getElementById(`time-${substep.id}`);
+                        
+                        // Set substep as active
+                        substepElement.classList.add('active');
+                        substepIcon.classList.add('active');
+                        statusBadge.textContent = 'Running';
+                        statusBadge.className = 'status-badge active';
+                        
+                        // Simulate substep processing time (with chance of error for demo)
+                        const processingTime = 1500 + Math.random() * 3000;
+                        await new Promise(resolve => setTimeout(resolve, processingTime));
+                        
+                        // Randomly simulate success or error (90% success rate)
+                        const isSuccess = Math.random() > 0.1;
+                        
+                        if (isSuccess) {
+                            // Mark substep as completed
+                            substepElement.classList.remove('active');
+                            substepElement.classList.add('completed');
+                            substepIcon.classList.remove('active');
+                            substepIcon.classList.add('completed');
+                            statusBadge.textContent = 'Finished';
+                            statusBadge.className = 'status-badge completed';
+                        } else {
+                            // Mark substep as error
+                            substepElement.classList.remove('active');
+                            substepElement.classList.add('error');
+                            substepIcon.classList.remove('active');
+                            substepIcon.classList.add('error');
+                            statusBadge.textContent = 'Error';
+                            statusBadge.className = 'status-badge error';
+                        }
+                        
+                        timeElement.textContent = this.formatElapsedTime();
+                    }
+                } else {
+                    // Simulate step completion for steps without substeps
+                    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+                }
+                
+                // Mark main step as completed
+                stepElement.classList.remove('active');
+                stepElement.classList.add('completed');
+                icon.classList.remove('active');
+                icon.classList.add('completed');
+                
+                // Update step time
+                const timeElement = stepElement.querySelector('.step-time');
+                timeElement.textContent = this.formatElapsedTime();
+                
+                this.currentStep = stepIndex + 1;
+            }
+
+            updateProgress() {
+                const progressFill = document.getElementById('overall-progress');
+                const percentage = (this.currentStep / this.totalSteps) * 100;
+                progressFill.style.width = percentage + '%';
+            }
+
+            startTimer() {
+                this.startTime = Date.now();
+                this.timerInterval = setInterval(() => {
+                    const elapsed = document.getElementById('elapsed-time');
+                    elapsed.textContent = this.formatElapsedTime();
+                }, 1000);
+            }
+
+            formatElapsedTime() {
+                if (!this.startTime) return '00:00';
+                
+                const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                
+                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            showResults() {
+                clearInterval(this.timerInterval);
+                
+                // Show the "View Analysis Output" button
+                document.getElementById('analysis-output-btn').style.display = 'flex';
+            }
+
+            showAnalysisOutput() {
+                document.getElementById('progress-section').style.display = 'none';
+                document.getElementById('analysis-complete-section').style.display = 'block';
+                document.getElementById('analysis-complete-section').classList.add('slide-in');
+                
+                // Populate the analyzed URL
+                document.getElementById('analyzed-url-text').textContent = this.analyzedUrl;
+                
+                this.renderResults();
+            }
+
+            renderResults() {
+                const resultsGrid = document.getElementById('results-grid');
+                
+                const results = [
+                    {
+                        title: 'Complete JSON Report',
+                        icon: '📊',
+                        description: 'Full structured data export with all analysis results',
+                        downloadUrl: '#'
+                    },
+                    {
+                        title: 'PDP Brand Perception Analysis',
+                        icon: '🎯',
+                        description: 'Brand perception analysis from product page content',
+                        downloadUrl: '#'
+                    },
+                    {
+                        title: 'Target Brand Perception Analysis',
+                        icon: '📈',
+                        description: 'Official brand channels perception evaluation',
+                        downloadUrl: '#'
+                    },
+                    {
+                        title: 'Brand Perception Gaps Report',
+                        icon: '💭',
+                        description: 'Comprehensive gaps analysis between PDP and target perception',
+                        downloadUrl: '#'
+                    },
+                    {
+                        title: 'R&R Analysis Report',
+                        icon: '⭐',
+                        description: 'Ratings and reviews sentiment analysis report',
+                        downloadUrl: '#'
+                    }
+                ];
+
+                resultsGrid.innerHTML = '';
+                
+                results.forEach(result => {
+                    const card = document.createElement('div');
+                    card.className = 'result-card';
+                    
+                    card.innerHTML = `
+                        <div class="result-header">
+                            <div class="result-icon">${result.icon}</div>
+                            <div class="result-title">${result.title}</div>
+                        </div>
+                        <p class="step-description">${result.description}</p>
+                        <a href="${result.downloadUrl}" class="download-btn">
+                            📥 Download
+                        </a>
+                    `;
+                    
+                    resultsGrid.appendChild(card);
+                });
+            }
+
+            showError(message) {
+                clearInterval(this.timerInterval);
+                alert(message);
+                // Reset to initial state
+                location.reload();
+            }
+        }
+
+        // Initialize the dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new PDPAnalysisDashboard();
+        });
+    </script>
+</body>
+</html>

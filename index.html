@@ -185,6 +185,19 @@
             font-weight: 600;
         }
 
+        .execution-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+        }
+
+        .execution-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
         .overall-progress {
             background: var(--surface);
             border-radius: 12px;
@@ -674,6 +687,10 @@
             .options {
                 grid-template-columns: 1fr;
             }
+
+            .execution-info {
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -720,7 +737,10 @@
         <div class="progress-section" id="progress-section">
             <div class="progress-header">
                 <h2 class="progress-title">Analysis in Progress...</h2>
-                <div class="step-time" id="elapsed-time">00:00</div>
+                <div class="execution-info">
+                    <div class="step-time" id="elapsed-time">00:00</div>
+                    <div class="execution-id" id="execution-id-display">ID: </div>
+                </div>
             </div>
             
             <div class="overall-progress">
@@ -937,6 +957,9 @@
                 document.querySelector('.url-input-section').style.display = 'none';
                 document.getElementById('progress-section').style.display = 'block';
                 document.getElementById('progress-section').classList.add('slide-in');
+                
+                // Display execution ID
+                document.getElementById('execution-id-display').textContent = `ID: ${this.executionId}`;
             }
 
             renderProgressSteps() {
@@ -994,20 +1017,24 @@
             }
 
             async executeWorkflow(url, options) {
-                // Prepare payload for n8n webhook
+                // Prepare payload for n8n webhook - NOW INCLUDING execution_id
                 const payload = {
                     url: url,
                     options: options,
                     timestamp: new Date().toISOString(),
-                    execution_id: this.executionId,
-                    callback_url: window.location.origin + '/status-callback'
+                    execution_id: this.executionId  // ✅ ADDED: Include execution_id in payload
                 };
 
                 // Show webhook status
                 const statusElement = document.getElementById('webhook-status');
                 statusElement.style.display = 'block';
                 statusElement.className = 'webhook-status info';
-                statusElement.textContent = '🔄 Sending request to n8n workflow...';
+                statusElement.innerHTML = `
+                    🔄 Sending request to n8n workflow...<br>
+                    <small>Execution ID: ${this.executionId}</small>
+                `;
+
+                console.log('Sending payload to n8n:', payload); // Debug log
 
                 try {
                     // Call n8n webhook
@@ -1022,23 +1049,31 @@
                     if (response.ok) {
                         const result = await response.json();
                         statusElement.className = 'webhook-status success';
-                        statusElement.textContent = '✅ n8n workflow started successfully! Tracking real-time progress...';
+                        statusElement.innerHTML = `
+                            ✅ n8n workflow started successfully! Tracking real-time progress...<br>
+                            <small>Execution ID: ${this.executionId}</small>
+                        `;
+                        
+                        console.log('n8n response:', result); // Debug log
                         
                         // Start real-time mode
                         this.isRealTimeMode = true;
                         this.startStatusPolling();
                         
                     } else {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
                     }
 
                 } catch (error) {
                     console.error('Webhook error:', error);
                     statusElement.className = 'webhook-status error';
-                    statusElement.textContent = `❌ Error: ${error.message}`;
+                    statusElement.innerHTML = `
+                        ❌ Error: ${error.message}<br>
+                        <small>Falling back to simulation mode...</small>
+                    `;
                     
                     // Fall back to simulation mode
-                    statusElement.textContent += ' - Running in simulation mode...';
                     this.isRealTimeMode = false;
                     await this.simulateProgressTracking();
                     this.showResults();
@@ -1097,7 +1132,12 @@
             }
 
             handleStatusUpdate(update) {
-                if (update.execution_id !== this.executionId) return;
+                if (update.execution_id !== this.executionId) {
+                    console.log('Received update for different execution:', update.execution_id);
+                    return;
+                }
+
+                console.log('Processing status update:', update);
 
                 const { step_id, status, message, progress } = update;
                 const stepElement = document.getElementById(`step-${step_id}`);
@@ -1134,6 +1174,7 @@
                         <div class="status-dot active"></div>
                         <span>Live: ${message || step_id}</span>
                     </div>
+                    <small>Execution ID: ${this.executionId}</small>
                 `;
             }
 
@@ -1154,7 +1195,10 @@
 
                 const statusElement = document.getElementById('webhook-status');
                 statusElement.className = 'webhook-status success';
-                statusElement.textContent = '🎉 Workflow completed successfully!';
+                statusElement.innerHTML = `
+                    🎉 Workflow completed successfully!<br>
+                    <small>Execution ID: ${this.executionId}</small>
+                `;
 
                 this.showResults();
             }

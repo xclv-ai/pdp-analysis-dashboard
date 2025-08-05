@@ -762,16 +762,16 @@
                     <label for="base-content">Base Content Analysis</label>
                 </div>
                 <div class="option">
-                    <input type="checkbox" id="from-brand" checked />
-                    <label for="from-brand">From Brand Content</label>
+                    <input type="checkbox" id="premium-content" checked />
+                    <label for="premium-content">From Brand Content</label>
                 </div>
                 <div class="option">
                     <input type="checkbox" id="from-manufacturer" checked />
                     <label for="from-manufacturer">From Manufacturer Content</label>
                 </div>
                 <div class="option">
-                    <input type="checkbox" id="sustainability" checked />
-                    <label for="sustainability">Sustainability Analysis</label>
+                    <input type="checkbox" id="brand-perception" checked />
+                    <label for="brand-perception">Brand Perception Evaluation</label>
                 </div>
                 <div class="option">
                     <input type="checkbox" id="video-content" checked />
@@ -997,13 +997,13 @@
                 this.analyzedUrl = url;
                 this.executionId = this.generateExecutionId();
 
+                // Updated options to match your n8n SET node
                 const options = {
                     base_content: document.getElementById('base-content').checked,
-                    from_brand: document.getElementById('from-brand').checked,
-                    from_manufacturer: document.getElementById('from-manufacturer').checked,
-                    sustainability: document.getElementById('sustainability').checked,
+                    premium_content: document.getElementById('premium-content').checked,
                     video_content: document.getElementById('video-content').checked,
-                    gallery_images: document.getElementById('gallery-images').checked
+                    gallery_images: document.getElementById('gallery-images').checked,
+                    brand_perception: document.getElementById('brand-perception').checked
                 };
 
                 this.showProgressSection();

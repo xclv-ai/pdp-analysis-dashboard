@@ -20,6 +20,7 @@
             --success: #10b981;
             --warning: #f59e0b;
             --error: #ef4444;
+            --skip: #6b7280;
             --background: #0f172a;
             --surface: #1e293b;
             --surface-light: #334155;
@@ -275,6 +276,12 @@
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
+        .step.skipped {
+            opacity: 0.3;
+            background: rgba(107, 114, 128, 0.05);
+            border: 1px solid rgba(107, 114, 128, 0.2);
+        }
+
         .step-header {
             display: flex;
             align-items: center;
@@ -314,6 +321,11 @@
             color: white;
         }
 
+        .step-icon.skipped {
+            background: var(--skip);
+            color: white;
+        }
+
         .step-main-content {
             flex: 1;
         }
@@ -323,9 +335,17 @@
             margin-bottom: 0.25rem;
         }
 
+        .step.skipped .step-title {
+            color: var(--text-muted);
+        }
+
         .step-description {
             color: var(--text-secondary);
             font-size: 0.9rem;
+        }
+
+        .step.skipped .step-description {
+            color: var(--text-muted);
         }
 
         .step-time {
@@ -372,6 +392,12 @@
             border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
+        .substep.skipped {
+            opacity: 0.3;
+            background: rgba(107, 114, 128, 0.05);
+            border: 1px solid rgba(107, 114, 128, 0.2);
+        }
+
         .substep-left {
             display: flex;
             align-items: center;
@@ -408,6 +434,11 @@
             color: white;
         }
 
+        .substep-icon.skipped {
+            background: var(--skip);
+            color: white;
+        }
+
         .substep-content {
             flex: 1;
             min-width: 0;
@@ -419,10 +450,18 @@
             margin-bottom: 0.25rem;
         }
 
+        .substep.skipped .substep-title {
+            color: var(--text-muted);
+        }
+
         .substep-description {
             color: var(--text-secondary);
             font-size: 0.8rem;
             line-height: 1.4;
+        }
+
+        .substep.skipped .substep-description {
+            color: var(--text-muted);
         }
 
         .substep-status {
@@ -459,6 +498,11 @@
         .status-badge.error {
             background: rgba(239, 68, 68, 0.2);
             color: var(--error);
+        }
+
+        .status-badge.skipped {
+            background: rgba(107, 114, 128, 0.2);
+            color: var(--skip);
         }
 
         .substep-time {
@@ -648,6 +692,10 @@
             background: var(--error);
         }
 
+        .status-dot.skipped {
+            background: var(--skip);
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -831,16 +879,18 @@
         class PDPAnalysisDashboard {
             constructor() {
                 this.completedSteps = new Set();
+                this.skippedSteps = new Set();
                 this.startTime = null;
                 this.timerInterval = null;
                 this.executionId = null;
                 this.analyzedUrl = null;
+                this.selectedOptions = {};
                 this.webhookUrl = 'https://xclv.app.n8n.cloud/webhook/f52ce650-8c2c-41ac-be01-96d0f00d0425';
                 this.isRealTimeMode = false;
                 this.supabaseClient = null;
                 this.realtimeChannel = null;
                 
-                // Updated step structure matching your finalized workflow
+                // Updated step structure with current-analysis as final step
                 this.steps = [
                     {
                         id: 'url-validation',
@@ -866,9 +916,9 @@
                         description: 'Extracting and enriching product information',
                         icon: '🕷️',
                         substeps: [
-                            { id: 'base-content', title: 'Base Content Analysis', description: 'Core product information and specifications', icon: '📄' },
-                            { id: 'from-brand', title: 'From the brand Section', description: 'Brand-specific content and messaging', icon: '🏷️' },
-                            { id: 'from-manufacturer', title: 'From the manufacturer Section', description: 'Manufacturer information and details', icon: '🏭' },
+                            { id: 'base-content', title: 'Base Content Analysis', description: 'Core product information and specifications', icon: '📄', option: 'base_content' },
+                            { id: 'from-brand', title: 'From the brand Section', description: 'Brand-specific content and messaging', icon: '🏷️', option: 'premium_content' },
+                            { id: 'from-manufacturer', title: 'From the manufacturer Section', description: 'Manufacturer information and details', icon: '🏭', option: 'from_manufacturer' },
                             { id: 'sustainability', title: 'Sustainability Section', description: 'Environmental and sustainability claims', icon: '🌱' }
                         ]
                     },
@@ -876,13 +926,15 @@
                         id: 'image-analysis',
                         title: 'Visual Deep Analysis',
                         description: 'Advanced analysis of product images and gallery',
-                        icon: '🖼️'
+                        icon: '🖼️',
+                        option: 'gallery_images'
                     },
                     {
                         id: 'video-processing',
                         title: 'Video Deep Processing',
                         description: 'Comprehensive processing and analysis of product videos',
-                        icon: '🎥'
+                        icon: '🎥',
+                        option: 'video_content'
                     },
                     {
                         id: 'ai-analysis',
@@ -894,7 +946,8 @@
                         id: 'brand-perception-gaps',
                         title: 'Brand Perception Gaps Evaluation',
                         description: 'Analyzing gaps between brand perception and reality',
-                        icon: '💭'
+                        icon: '💭',
+                        option: 'brand_perception'
                     },
                     {
                         id: 'ratings-reviews',
@@ -913,6 +966,12 @@
                         title: 'File Sharing',
                         description: 'Making results accessible for download',
                         icon: '🔗'
+                    },
+                    {
+                        id: 'current-analysis',
+                        title: 'Analysis Complete',
+                        description: 'Final analysis status and completion',
+                        icon: '✅'
                     }
                 ];
 
@@ -997,13 +1056,14 @@
                 this.analyzedUrl = url;
                 this.executionId = this.generateExecutionId();
 
-                // Updated options to match your n8n SET node
-                const options = {
+                // Capture selected options
+                this.selectedOptions = {
                     base_content: document.getElementById('base-content').checked,
                     premium_content: document.getElementById('premium-content').checked,
                     video_content: document.getElementById('video-content').checked,
                     gallery_images: document.getElementById('gallery-images').checked,
-                    brand_perception: document.getElementById('brand-perception').checked
+                    brand_perception: document.getElementById('brand-perception').checked,
+                    from_manufacturer: document.getElementById('from-manufacturer').checked
                 };
 
                 this.showProgressSection();
@@ -1011,7 +1071,7 @@
                 this.startTimer();
                 
                 try {
-                    await this.executeWorkflow(url, options);
+                    await this.executeWorkflow(url, this.selectedOptions);
                 } catch (error) {
                     console.error('Analysis failed:', error);
                     this.showError('Analysis failed. Please try again.');
@@ -1034,49 +1094,84 @@
                 document.getElementById('execution-id-display').textContent = `ID: ${this.executionId}`;
             }
 
+            isStepSkipped(step) {
+                if (step.option) {
+                    return !this.selectedOptions[step.option];
+                }
+                return false;
+            }
+
+            isSubstepSkipped(substep) {
+                if (substep.option) {
+                    return !this.selectedOptions[substep.option];
+                }
+                return false;
+            }
+
             renderProgressSteps() {
                 const stepsContainer = document.getElementById('progress-steps');
                 stepsContainer.innerHTML = '';
 
                 this.steps.forEach((step, index) => {
                     const stepElement = document.createElement('div');
-                    stepElement.className = 'step';
+                    const stepSkipped = this.isStepSkipped(step);
+                    
+                    stepElement.className = stepSkipped ? 'step skipped' : 'step';
                     stepElement.id = `step-${step.id}`;
                     
                     let substepsHtml = '';
                     if (step.substeps) {
                         substepsHtml = `
                             <div class="substeps" id="substeps-${step.id}">
-                                ${step.substeps.map(substep => `
-                                    <div class="substep" id="substep-${substep.id}">
-                                        <div class="substep-left">
-                                            <div class="substep-icon">${substep.icon}</div>
-                                            <div class="substep-content">
-                                                <div class="substep-title">${substep.title}</div>
-                                                <div class="substep-description">${substep.description}</div>
+                                ${step.substeps.map(substep => {
+                                    const substepSkipped = this.isSubstepSkipped(substep);
+                                    const substepClass = substepSkipped ? 'substep skipped' : 'substep';
+                                    const statusText = substepSkipped ? 'Skipped' : 'Pending';
+                                    const statusClass = substepSkipped ? 'status-badge skipped' : 'status-badge pending';
+                                    
+                                    if (substepSkipped) {
+                                        this.skippedSteps.add(substep.id);
+                                    }
+                                    
+                                    return `
+                                        <div class="${substepClass}" id="substep-${substep.id}">
+                                            <div class="substep-left">
+                                                <div class="substep-icon ${substepSkipped ? 'skipped' : ''}">${substep.icon}</div>
+                                                <div class="substep-content">
+                                                    <div class="substep-title">${substep.title}</div>
+                                                    <div class="substep-description">${substep.description}</div>
+                                                </div>
+                                            </div>
+                                            <div class="substep-status">
+                                                <div class="${statusClass}" id="status-${substep.id}">${statusText}</div>
+                                                <div class="substep-time" id="time-${substep.id}"></div>
                                             </div>
                                         </div>
-                                        <div class="substep-status">
-                                            <div class="status-badge pending" id="status-${substep.id}">Pending</div>
-                                            <div class="substep-time" id="time-${substep.id}"></div>
-                                        </div>
-                                    </div>
-                                `).join('')}
+                                    `;
+                                }).join('')}
                             </div>
                         `;
                     }
                     
+                    const stepStatus = stepSkipped ? 'Skipped' : 'Waiting...';
+                    const iconClass = stepSkipped ? 'step-icon skipped' : 'step-icon pending';
+                    const dotClass = stepSkipped ? 'status-dot skipped' : 'status-dot';
+                    
+                    if (stepSkipped) {
+                        this.skippedSteps.add(step.id);
+                    }
+                    
                     stepElement.innerHTML = `
                         <div class="step-header">
-                            <div class="step-icon pending">
+                            <div class="${iconClass}">
                                 ${step.icon}
                             </div>
                             <div class="step-main-content">
                                 <div class="step-title">${step.title}</div>
                                 <div class="step-description">${step.description}</div>
                                 <div class="status-indicator">
-                                    <div class="status-dot" id="dot-${step.id}"></div>
-                                    <span id="status-text-${step.id}">Waiting...</span>
+                                    <div class="${dotClass}" id="dot-${step.id}"></div>
+                                    <span id="status-text-${step.id}">${stepStatus}</span>
                                 </div>
                             </div>
                             <div class="step-time"></div>
@@ -1218,6 +1313,7 @@
             mapStepId(dbStepId) {
                 const stepMapping = {
                     'url_validation': 'url-validation',
+                    'url-validation': 'url-validation',
                     'folder_creation': 'folder-creation',
                     'platform_detection': 'platform-detection',
                     'content_scraping': 'content-scraping',
@@ -1232,6 +1328,8 @@
                     'ratings_reviews': 'ratings-reviews',
                     'report_generation': 'report-generation',
                     'file_sharing': 'file-sharing',
+                    'current_analysis': 'current-analysis',
+                    'current-analysis': 'current-analysis',
                     'content': 'content-scraping' // Current example from database
                 };
                 
@@ -1262,6 +1360,12 @@
 
                 const { step_id, status, message, timestamp } = update;
                 
+                // Skip processing if step is marked as skipped
+                if (this.skippedSteps.has(step_id)) {
+                    console.log(`Skipping update for ${step_id} as it's marked as skipped`);
+                    return;
+                }
+                
                 const stepElement = document.getElementById(`step-${step_id}`);
                 if (stepElement) {
                     this.updateStepStatus(step_id, status, message);
@@ -1284,7 +1388,8 @@
                     <small>Execution ID: ${this.executionId} • ${new Date().toLocaleTimeString()}</small>
                 `;
 
-                if (step_id === 'file-sharing' && status === 'completed') {
+                // Handle completion when current-analysis is completed
+                if (step_id === 'current-analysis' && status === 'completed') {
                     this.handleWorkflowCompletion();
                 }
             }
@@ -1334,9 +1439,9 @@
             }
 
             updateOverallProgress() {
-                const totalSteps = this.steps.length;
+                const totalSteps = this.steps.length - this.skippedSteps.size;
                 const completed = this.completedSteps.size;
-                const percentage = Math.min((completed / totalSteps) * 100, 100);
+                const percentage = Math.min((completed / Math.max(totalSteps, 1)) * 100, 100);
                 
                 const progressFill = document.getElementById('overall-progress');
                 progressFill.style.width = percentage + '%';
@@ -1347,6 +1452,7 @@
                     case 'active': return 'Processing...';
                     case 'completed': return 'Completed';
                     case 'error': return 'Error occurred';
+                    case 'skipped': return 'Skipped';
                     default: return 'Waiting...';
                 }
             }
@@ -1360,9 +1466,13 @@
                 const statusElement = document.getElementById('webhook-status');
                 statusElement.className = 'webhook-status success';
                 statusElement.innerHTML = `
-                    🎉 Workflow completed successfully!<br>
+                    🎉 Analysis completed successfully!<br>
                     <small>Execution ID: ${this.executionId} • Analysis finished at ${new Date().toLocaleTimeString()}</small>
                 `;
+
+                // Update progress title
+                const progressTitle = document.querySelector('.progress-title');
+                progressTitle.textContent = 'Analysis Complete! 🎉';
 
                 this.updateConnectionStatus('connected', '🟢 Analysis complete');
                 this.showResults();
@@ -1374,6 +1484,11 @@
                 for (let i = 0; i < this.steps.length; i++) {
                     const step = this.steps[i];
                     
+                    // Skip steps that are marked as skipped
+                    if (this.skippedSteps.has(step.id)) {
+                        continue;
+                    }
+                    
                     this.handleStatusUpdate({
                         execution_id: this.executionId,
                         step_id: step.id,
@@ -1383,6 +1498,10 @@
                     
                     if (step.substeps) {
                         for (const substep of step.substeps) {
+                            if (this.skippedSteps.has(substep.id)) {
+                                continue;
+                            }
+                            
                             await new Promise(resolve => setTimeout(resolve, 1500));
                             this.handleStatusUpdate({
                                 execution_id: this.executionId,
@@ -1409,6 +1528,15 @@
                         message: `${step.title} completed successfully`
                     });
                 }
+                
+                // Simulate current-analysis completion
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                this.handleStatusUpdate({
+                    execution_id: this.executionId,
+                    step_id: 'current-analysis',
+                    status: 'completed',
+                    message: 'Analysis completed successfully'
+                });
             }
 
             startTimer() {

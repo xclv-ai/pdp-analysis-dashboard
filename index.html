@@ -14,7 +14,6 @@
         }
 
         :root {
-            /* Colors from redesigned version */
             --cream: #f5f3eb;
             --pink: #f1c7d6;
             --pink-dark: #e6b8cb;
@@ -456,6 +455,8 @@
             padding: 2rem;
             transition: all 0.3s ease;
             opacity: 0.6;
+            position: relative;
+            overflow: hidden;
         }
 
         .step.active {
@@ -483,11 +484,55 @@
             border: 1px solid rgba(107, 114, 128, 0.2);
         }
 
+        /* Animated progress fill for main step - ONLY when no substeps */
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, 
+                rgba(59, 130, 246, 0.05) 0%, 
+                rgba(59, 130, 246, 0.1) 50%, 
+                rgba(59, 130, 246, 0.05) 100%);
+            transition: width 3s ease-out;
+            z-index: 1;
+            border-radius: 16px;
+        }
+        
+        /* Only animate main step if it has NO substeps */
+        .step:not(.has-substeps).active::before {
+            animation: progressPulse 4s ease-in-out infinite;
+        }
+        
+        /* Completed state for main steps without substeps */
+        .step:not(.has-substeps).completed::before {
+            width: 100%;
+            background: linear-gradient(90deg, 
+                rgba(16, 185, 129, 0.03) 0%, 
+                rgba(16, 185, 129, 0.08) 50%, 
+                rgba(16, 185, 129, 0.03) 100%);
+        }
+        
+        /* Steps WITH substeps should NOT animate the main container */
+        .step.has-substeps::before {
+            display: none;
+        }
+        
+        @keyframes progressPulse {
+            0% { width: 20%; opacity: 0.3; }
+            50% { width: 80%; opacity: 0.7; }
+            100% { width: 20%; opacity: 0.3; }
+        }
+
         .step-header {
             display: flex;
             align-items: flex-start;
             gap: 1.5rem;
             margin-bottom: 1rem;
+            position: relative;
+            z-index: 2;
         }
 
         .step-icon {
@@ -531,6 +576,8 @@
         .step-content {
             flex: 1;
             min-width: 0;
+            position: relative;
+            z-index: 2;
         }
 
         .step-title {
@@ -590,6 +637,8 @@
             font-family: 'Space Grotesk', monospace;
             font-size: 0.875rem;
             color: var(--gray-med);
+            position: relative;
+            z-index: 2;
         }
 
         /* Substeps */
@@ -597,6 +646,8 @@
             margin-top: 1.5rem;
             padding-left: 2rem;
             border-left: 2px solid #e2e8f0;
+            position: relative;
+            z-index: 2;
         }
 
         .substep {
@@ -610,6 +661,8 @@
             border-radius: 8px;
             opacity: 0.5;
             transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
         }
 
         .substep.active {
@@ -636,11 +689,48 @@
             border: 1px solid rgba(107, 114, 128, 0.2);
         }
 
+        /* Substep animated progress fill */
+        .substep::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, 
+                rgba(59, 130, 246, 0.08) 0%, 
+                rgba(59, 130, 246, 0.15) 50%, 
+                rgba(59, 130, 246, 0.08) 100%);
+            transition: width 2s ease-out;
+            z-index: 1;
+            border-radius: 8px;
+        }
+        
+        .substep.active::before {
+            animation: progressPulseSmall 2.5s ease-in-out infinite;
+        }
+        
+        .substep.completed::before {
+            width: 100%;
+            background: linear-gradient(90deg, 
+                rgba(16, 185, 129, 0.05) 0%, 
+                rgba(16, 185, 129, 0.1) 50%, 
+                rgba(16, 185, 129, 0.05) 100%);
+        }
+        
+        @keyframes progressPulseSmall {
+            0% { width: 15%; opacity: 0.4; }
+            50% { width: 70%; opacity: 0.9; }
+            100% { width: 15%; opacity: 0.4; }
+        }
+
         .substep-left {
             display: flex;
             align-items: center;
             gap: 0.75rem;
             flex: 1;
+            position: relative;
+            z-index: 2;
         }
 
         .substep-icon {
@@ -688,6 +778,8 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            position: relative;
+            z-index: 2;
         }
 
         .status-badge {
@@ -722,6 +814,14 @@
         .status-badge.skipped {
             background: rgba(107, 114, 128, 0.2);
             color: var(--skip);
+        }
+
+        /* Individual step timers */
+        .step-timer {
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.875rem;
+            color: var(--gray-med);
+            margin-left: 0.5rem;
         }
 
         /* Webhook Status */
@@ -1177,6 +1277,7 @@
             constructor() {
                 this.completedSteps = new Set();
                 this.skippedSteps = new Set();
+                this.stepTimers = new Map(); // Individual step timers
                 this.startTime = null;
                 this.timerInterval = null;
                 this.executionId = null;
@@ -1187,7 +1288,6 @@
                 this.supabaseClient = null;
                 this.realtimeChannel = null;
                 
-                // Updated step structure with current-analysis as final step
                 this.steps = [
                     {
                         id: 'url-validation',
@@ -1213,9 +1313,9 @@
                         description: 'Extracting and enriching product information',
                         icon: '🕷️',
                         substeps: [
-                            { id: 'base-content', title: 'Base Content Analysis', description: 'Core product information and specifications', icon: '📄', option: 'base_content' },
-                            { id: 'from-brand', title: 'From the brand Section', description: 'Brand-specific content and messaging', icon: '🏷️', option: 'premium_content' },
-                            { id: 'from-manufacturer', title: 'From the manufacturer Section', description: 'Manufacturer information and details', icon: '🏭', option: 'from_manufacturer' },
+                            { id: 'base-content', title: 'Base Content Analysis', description: 'Core product information and specifications', icon: '📄', option: 'base-content' },
+                            { id: 'from-brand', title: 'From the brand Section', description: 'Brand-specific content and messaging', icon: '🏷️', option: 'premium-content' },
+                            { id: 'from-manufacturer', title: 'From the manufacturer Section', description: 'Manufacturer information and details', icon: '🏭', option: 'from-manufacturer' },
                             { id: 'sustainability', title: 'Sustainability Section', description: 'Environmental and sustainability claims', icon: '🌱' }
                         ]
                     },
@@ -1224,14 +1324,14 @@
                         title: 'Visual Deep Analysis',
                         description: 'Advanced analysis of product images and gallery',
                         icon: '🖼️',
-                        option: 'gallery_images'
+                        option: 'gallery-images'
                     },
                     {
                         id: 'video-processing',
                         title: 'Video Deep Processing',
                         description: 'Comprehensive processing and analysis of product videos',
                         icon: '🎥',
-                        option: 'video_content'
+                        option: 'video-content'
                     },
                     {
                         id: 'ai-analysis',
@@ -1244,7 +1344,7 @@
                         title: 'Brand Perception Gaps Evaluation',
                         description: 'Analyzing gaps between brand perception and reality',
                         icon: '💭',
-                        option: 'brand_perception'
+                        option: 'brand-perception'
                     },
                     {
                         id: 'ratings-reviews',
@@ -1350,14 +1450,14 @@
                 this.analyzedUrl = url;
                 this.executionId = this.generateExecutionId();
 
-                // Capture selected options
+                // Capture selected options - using hyphen format
                 this.selectedOptions = {
-                    base_content: document.getElementById('base-content').checked,
-                    premium_content: document.getElementById('premium-content').checked,
-                    video_content: document.getElementById('video-content').checked,
-                    gallery_images: document.getElementById('gallery-images').checked,
-                    brand_perception: document.getElementById('brand-perception').checked,
-                    from_manufacturer: document.getElementById('from-manufacturer').checked
+                    'base-content': document.getElementById('base-content').checked,
+                    'premium-content': document.getElementById('premium-content').checked,
+                    'video-content': document.getElementById('video-content').checked,
+                    'gallery-images': document.getElementById('gallery-images').checked,
+                    'brand-perception': document.getElementById('brand-perception').checked,
+                    'from-manufacturer': document.getElementById('from-manufacturer').checked
                 };
 
                 this.showProgressSection();
@@ -1410,7 +1510,13 @@
                     const stepElement = document.createElement('div');
                     const stepSkipped = this.isStepSkipped(step);
                     
-                    stepElement.className = stepSkipped ? 'step skipped' : 'step';
+                    // Add has-substeps class if step has substeps
+                    let stepClass = stepSkipped ? 'step skipped' : 'step';
+                    if (step.substeps) {
+                        stepClass += ' has-substeps';
+                    }
+                    
+                    stepElement.className = stepClass;
                     stepElement.id = `step-${step.id}`;
                     
                     let substepsHtml = '';
@@ -1435,6 +1541,7 @@
                                             </div>
                                             <div class="substep-status">
                                                 <div class="${statusClass}" id="status-${substep.id}">${statusText}</div>
+                                                <div class="step-timer" id="timer-${substep.id}"></div>
                                             </div>
                                         </div>
                                     `;
@@ -1464,13 +1571,54 @@
                                     <span class="step-status-text" id="status-text-${step.id}">${stepStatus}</span>
                                 </div>
                             </div>
-                            <div class="step-time"></div>
+                            <div class="step-time">
+                                <div class="step-timer" id="timer-${step.id}"></div>
+                            </div>
                         </div>
                         ${substepsHtml}
                     `;
                     
                     stepsContainer.appendChild(stepElement);
                 });
+            }
+
+            startStepTimer(stepId) {
+                if (this.stepTimers.has(stepId)) {
+                    clearInterval(this.stepTimers.get(stepId).interval);
+                }
+
+                const startTime = Date.now();
+                const timerElement = document.getElementById(`timer-${stepId}`);
+                
+                const timer = {
+                    startTime: startTime,
+                    interval: setInterval(() => {
+                        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                        const minutes = Math.floor(elapsed / 60);
+                        const seconds = elapsed % 60;
+                        if (timerElement) {
+                            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        }
+                    }, 1000)
+                };
+
+                this.stepTimers.set(stepId, timer);
+            }
+
+            stopStepTimer(stepId) {
+                if (this.stepTimers.has(stepId)) {
+                    const timer = this.stepTimers.get(stepId);
+                    clearInterval(timer.interval);
+                    
+                    // Show final duration
+                    const finalDuration = Math.floor((Date.now() - timer.startTime) / 1000);
+                    const minutes = Math.floor(finalDuration / 60);
+                    const seconds = finalDuration % 60;
+                    const timerElement = document.getElementById(`timer-${stepId}`);
+                    if (timerElement) {
+                        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }
             }
 
             async executeWorkflow(url, options) {
@@ -1588,6 +1736,7 @@
                 if (eventType === 'INSERT' || eventType === 'UPDATE') {
                     const { step_id, status, timestamp } = newRecord;
                     
+                    // Only use clean 'url-validation' format
                     const mappedStepId = this.mapStepId(step_id);
                     
                     this.handleStatusUpdate({
@@ -1601,26 +1750,24 @@
             }
 
             mapStepId(dbStepId) {
+                // Only hyphen format - n8n sends this way
                 const stepMapping = {
-                    'url_validation': 'url-validation',
                     'url-validation': 'url-validation',
-                    'folder_creation': 'folder-creation',
-                    'platform_detection': 'platform-detection',
-                    'content_scraping': 'content-scraping',
-                    'base_content': 'base-content',
-                    'from_brand': 'from-brand',
-                    'from_manufacturer': 'from-manufacturer',
+                    'folder-creation': 'folder-creation', 
+                    'platform-detection': 'platform-detection',
+                    'content-scraping': 'content-scraping',
+                    'base-content': 'base-content',
+                    'from-brand': 'from-brand',
+                    'from-manufacturer': 'from-manufacturer',
                     'sustainability': 'sustainability',
-                    'image_analysis': 'image-analysis',
-                    'video_processing': 'video-processing',
-                    'ai_analysis': 'ai-analysis',
-                    'brand_perception_gaps': 'brand-perception-gaps',
-                    'ratings_reviews': 'ratings-reviews',
-                    'report_generation': 'report-generation',
-                    'file_sharing': 'file-sharing',
-                    'current_analysis': 'current-analysis',
-                    'current-analysis': 'current-analysis',
-                    'content': 'content-scraping'
+                    'image-analysis': 'image-analysis',
+                    'video-processing': 'video-processing',
+                    'ai-analysis': 'ai-analysis',
+                    'brand-perception-gaps': 'brand-perception-gaps',
+                    'ratings-reviews': 'ratings-reviews',
+                    'report-generation': 'report-generation',
+                    'file-sharing': 'file-sharing',
+                    'current-analysis': 'current-analysis'
                 };
                 
                 return stepMapping[dbStepId] || dbStepId;
@@ -1655,6 +1802,15 @@
                     console.log(`Skipping update for ${step_id} as it's marked as skipped`);
                     return;
                 }
+
+                // Start timer when step becomes active
+                if (status === 'active') {
+                    this.startStepTimer(step_id);
+                }
+                // Stop timer when step is completed or errored
+                else if (status === 'completed' || status === 'error') {
+                    this.stopStepTimer(step_id);
+                }
                 
                 const stepElement = document.getElementById(`step-${step_id}`);
                 if (stepElement) {
@@ -1687,16 +1843,21 @@
                 const statusTextElement = document.getElementById(`status-text-${stepId}`);
                 
                 if (stepElement && dotElement && statusTextElement) {
-                    stepElement.className = `step ${status}`;
+                    // Preserve has-substeps class when updating status
+                    const hasSubsteps = stepElement.classList.contains('has-substeps');
+                    const isSkipped = stepElement.classList.contains('skipped');
+                    
+                    let newClasses = `step ${status}`;
+                    if (hasSubsteps) newClasses += ' has-substeps';
+                    if (isSkipped) newClasses += ' skipped';
+                    
+                    stepElement.className = newClasses;
                     
                     const icon = stepElement.querySelector('.step-icon');
                     icon.className = `step-icon ${status}`;
                     
                     dotElement.className = `step-status-dot ${status}`;
                     statusTextElement.textContent = message || this.getStatusText(status);
-                    
-                    const timeElement = stepElement.querySelector('.step-time');
-                    timeElement.textContent = this.formatElapsedTime();
                     
                     if (status === 'completed') {
                         this.completedSteps.add(stepId);
@@ -1746,6 +1907,11 @@
                     this.realtimeChannel.unsubscribe();
                     this.realtimeChannel = null;
                 }
+
+                // Stop all running timers
+                this.stepTimers.forEach((timer, stepId) => {
+                    this.stopStepTimer(stepId);
+                });
 
                 const statusElement = document.getElementById('webhook-status');
                 statusElement.className = 'webhook-status success';

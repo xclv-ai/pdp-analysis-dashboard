@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDP Analysis Dashboard</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400..700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
         
         * {
             margin: 0;
@@ -14,163 +14,343 @@
         }
 
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #ec4899;
+            /* Colors from redesigned version */
+            --cream: #f5f3eb;
+            --pink: #f1c7d6;
+            --pink-dark: #e6b8cb;
+            --teal: #0a3b44;
+            --teal-dark: #053139;
+            --gray-light: #f8f9fa;
+            --gray-med: #94a3b8;
+            --gray-dark: #475569;
+            --black: #0f172a;
+            --white: #ffffff;
+            --green: #10b981;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --yellow: #f59e0b;
+            --skip: #6b7280;
+            --border: #e2e8f0;
+            --primary: #0a3b44;
+            --secondary: #f1c7d6;
             --success: #10b981;
             --warning: #f59e0b;
             --error: #ef4444;
-            --skip: #6b7280;
-            --background: #0f172a;
-            --surface: #1e293b;
-            --surface-light: #334155;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #64748b;
-            --border: #374151;
-            --glass: rgba(255, 255, 255, 0.05);
-            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
         body {
-            font-family: "Kode Mono", monospace;
-            font-optical-sizing: auto;
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--black);
+            line-height: 1.5;
             font-weight: 400;
-            font-style: normal;
-            background: linear-gradient(135deg, var(--background) 0%, #1a202c 100%);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
         }
 
-        .dashboard {
+        /* Header */
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .header {
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--teal);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+        }
+
+        .connection-status.connected {
+            background: #ecfdf5;
+            border-color: #bbf7d0;
+            color: #059669;
+        }
+
+        .connection-status.disconnected {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
+        .connection-status.connecting {
+            background: #fefbeb;
+            border-color: #fed7aa;
+            color: #d97706;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Main Content */
+        .main {
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--cream);
+            padding: 4rem 0 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 480px;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--teal-dark);
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-content p {
+            font-size: 1.25rem;
+            color: var(--gray-dark);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .hero-cta {
+            background: var(--teal);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .hero-cta:hover {
+            background: var(--teal-dark);
+        }
+
+        /* Terminal Window */
+        .terminal-window {
+            background: var(--teal-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .terminal-header {
+            background: var(--teal);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27ca3f; }
+
+        .terminal-title {
+            margin-left: 1rem;
+            color: var(--white);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .terminal-content {
+            padding: 1.5rem;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #94f7c0;
+            background: var(--teal-dark);
+            min-height: 300px;
+        }
+
+        .terminal-line {
+            margin-bottom: 0.5rem;
+        }
+
+        .terminal-prompt {
+            color: #60a5fa;
+        }
+
+        .terminal-success {
+            color: #34d399;
+        }
+
+        .terminal-warning {
+            color: #fbbf24;
+        }
+
+        .terminal-error {
+            color: #f87171;
+        }
+
+        /* Input Section */
+        .input-section {
+            background: var(--pink);
+            padding: 4rem 0;
+        }
+
+        .input-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .input-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-header {
             text-align: center;
             margin-bottom: 3rem;
         }
 
-        .header h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
+        .input-header h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--teal-dark);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
         }
 
-        .header p {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
+        .input-header p {
+            font-size: 1.125rem;
+            color: var(--gray-dark);
         }
 
-        .connection-status {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        .connection-status.connected {
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            color: var(--success);
-        }
-
-        .connection-status.disconnected {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: var(--error);
-        }
-
-        .connection-status.connecting {
-            background: rgba(245, 158, 11, 0.2);
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            color: var(--warning);
-        }
-
-        .url-input-section {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 2.5rem;
-            margin-bottom: 3rem;
-            box-shadow: var(--shadow);
-        }
-
-        .input-group {
+        .url-form {
             display: flex;
             gap: 1rem;
+            margin-bottom: 3rem;
             align-items: flex-end;
-            margin-bottom: 1.5rem;
         }
 
-        .input-wrapper {
+        .url-input-group {
             flex: 1;
         }
 
-        label {
+        .url-label {
             display: block;
-            font-weight: 500;
+            font-weight: 600;
+            color: var(--teal-dark);
             margin-bottom: 0.5rem;
-            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        input[type="url"] {
+        .url-input {
             width: 100%;
-            padding: 1rem 1.5rem;
-            background: var(--surface);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-primary);
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
             font-size: 1rem;
-            transition: all 0.3s ease;
+            transition: border-color 0.2s;
         }
 
-        input[type="url"]:focus {
+        .url-input:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            border-color: var(--teal);
         }
 
         .analyze-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            border: none;
+            background: var(--teal);
+            color: var(--white);
             padding: 1rem 2rem;
-            border-radius: 12px;
-            font-weight: 600;
+            border: none;
+            border-radius: 8px;
             font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            transform: translateY(0);
+            transition: background 0.2s;
+            white-space: nowrap;
         }
 
         .analyze-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+            background: var(--teal-dark);
         }
 
         .analyze-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            transform: none;
         }
 
-        .options {
+        /* Options Section */
+        .options-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .option-group {
+            background: var(--gray-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .option-group h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--teal-dark);
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .option-group p {
+            font-size: 0.875rem;
+            color: var(--gray-dark);
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
         }
 
@@ -179,101 +359,122 @@
             align-items: center;
             gap: 0.75rem;
             padding: 1rem;
-            background: var(--surface);
-            border-radius: 12px;
-            transition: all 0.3s ease;
+            background: var(--white);
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
         }
 
         .option:hover {
-            background: var(--surface-light);
+            border-color: var(--teal);
+            background: #f0fdfa;
         }
 
-        .option input[type="checkbox"] {
+        .option input {
             width: 18px;
             height: 18px;
-            accent-color: var(--primary);
+            accent-color: var(--teal);
         }
 
+        .option label {
+            font-weight: 500;
+            color: var(--teal-dark);
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        /* Progress Section */
         .progress-section {
             display: none;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 2.5rem;
-            margin-bottom: 3rem;
+            background: var(--white);
+            padding: 4rem 0;
+        }
+
+        .progress-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
         }
 
         .progress-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
         }
 
         .progress-title {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--teal-dark);
+            letter-spacing: -0.02em;
         }
 
         .execution-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.25rem;
+            text-align: right;
+        }
+
+        .elapsed-time {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--teal);
+            font-family: 'Space Grotesk', monospace;
         }
 
         .execution-id {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--gray-med);
+            font-family: 'Space Grotesk', monospace;
+            margin-top: 0.25rem;
         }
 
         .overall-progress {
-            background: var(--surface);
-            border-radius: 12px;
+            background: #e2e8f0;
             height: 8px;
-            margin-bottom: 2rem;
+            border-radius: 4px;
+            margin-bottom: 3rem;
             overflow: hidden;
         }
 
         .overall-progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            background: linear-gradient(90deg, var(--teal), var(--blue));
             width: 0%;
-            transition: width 0.6s ease;
+            transition: width 0.5s ease;
+            border-radius: 4px;
         }
 
-        .progress-steps {
+        .steps-container {
             display: grid;
             gap: 1.5rem;
         }
 
         .step {
-            display: block;
-            padding: 1.5rem;
-            background: var(--surface);
+            background: var(--gray-light);
+            border: 1px solid #e2e8f0;
             border-radius: 16px;
+            padding: 2rem;
             transition: all 0.3s ease;
-            opacity: 0.5;
+            opacity: 0.6;
         }
 
         .step.active {
             opacity: 1;
-            background: var(--surface-light);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+            border-color: var(--blue);
+            background: #eff6ff;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
         }
 
         .step.completed {
             opacity: 1;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-color: var(--green);
+            background: #ecfdf5;
         }
 
         .step.error {
             opacity: 1;
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-color: var(--red);
+            background: #fef2f2;
         }
 
         .step.skipped {
@@ -284,8 +485,8 @@
 
         .step-header {
             display: flex;
-            align-items: center;
-            gap: 1rem;
+            align-items: flex-start;
+            gap: 1.5rem;
             margin-bottom: 1rem;
         }
 
@@ -297,99 +498,136 @@
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
+            background: var(--white);
+            color: var(--gray-med);
+            border: 2px solid #e2e8f0;
             flex-shrink: 0;
         }
 
-        .step-icon.pending {
-            background: var(--surface-light);
-            color: var(--text-muted);
-        }
-
         .step-icon.active {
-            background: var(--primary);
-            color: white;
-            animation: pulse 2s infinite;
+            background: var(--blue);
+            color: var(--white);
+            border-color: var(--blue);
         }
 
         .step-icon.completed {
-            background: var(--success);
-            color: white;
+            background: var(--green);
+            color: var(--white);
+            border-color: var(--green);
         }
 
         .step-icon.error {
-            background: var(--error);
-            color: white;
+            background: var(--red);
+            color: var(--white);
+            border-color: var(--red);
         }
 
         .step-icon.skipped {
             background: var(--skip);
-            color: white;
+            color: var(--white);
+            border-color: var(--skip);
         }
 
-        .step-main-content {
+        .step-content {
             flex: 1;
+            min-width: 0;
         }
 
         .step-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--teal-dark);
+            margin-bottom: 0.5rem;
         }
 
         .step.skipped .step-title {
-            color: var(--text-muted);
+            color: var(--gray-med);
         }
 
         .step-description {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            color: var(--gray-dark);
+            margin-bottom: 1rem;
         }
 
         .step.skipped .step-description {
-            color: var(--text-muted);
+            color: var(--gray-med);
+        }
+
+        .step-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .step-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gray-med);
+        }
+
+        .step-status-dot.active {
+            background: var(--blue);
+            animation: pulse 2s infinite;
+        }
+
+        .step-status-dot.completed {
+            background: var(--green);
+        }
+
+        .step-status-dot.error {
+            background: var(--red);
+        }
+
+        .step-status-dot.skipped {
+            background: var(--skip);
         }
 
         .step-time {
-            color: var(--text-muted);
-            font-size: 0.8rem;
             margin-left: auto;
-            align-self: flex-start;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.875rem;
+            color: var(--gray-med);
         }
 
+        /* Substeps */
         .substeps {
-            display: grid;
-            gap: 0.75rem;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
+            padding-left: 2rem;
+            border-left: 2px solid #e2e8f0;
         }
 
         .substep {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
             padding: 1rem;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            opacity: 0.4;
+            margin-bottom: 0.75rem;
+            background: var(--white);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            opacity: 0.5;
+            transition: all 0.2s;
         }
 
         .substep.active {
             opacity: 1;
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-color: var(--blue);
+            background: #eff6ff;
         }
 
         .substep.completed {
             opacity: 1;
-            background: rgba(16, 185, 129, 0.05);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-color: var(--green);
+            background: #ecfdf5;
         }
 
         .substep.error {
             opacity: 1;
-            background: rgba(239, 68, 68, 0.05);
-            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-color: var(--red);
+            background: #fef2f2;
         }
 
         .substep.skipped {
@@ -406,98 +644,79 @@
         }
 
         .substep-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-            background: var(--surface);
-            color: var(--text-muted);
+            font-size: 0.875rem;
+            background: #f1f5f9;
+            color: var(--gray-med);
         }
 
         .substep-icon.active {
-            background: var(--primary);
-            color: white;
-            animation: pulse 2s infinite;
+            background: var(--blue);
+            color: var(--white);
         }
 
         .substep-icon.completed {
-            background: var(--success);
-            color: white;
+            background: var(--green);
+            color: var(--white);
         }
 
         .substep-icon.error {
-            background: var(--error);
-            color: white;
+            background: var(--red);
+            color: var(--white);
         }
 
         .substep-icon.skipped {
             background: var(--skip);
-            color: white;
-        }
-
-        .substep-content {
-            flex: 1;
-            min-width: 0;
+            color: var(--white);
         }
 
         .substep-title {
-            font-weight: 500;
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
+            font-weight: 600;
+            color: var(--teal-dark);
         }
 
         .substep.skipped .substep-title {
-            color: var(--text-muted);
-        }
-
-        .substep-description {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            line-height: 1.4;
-        }
-
-        .substep.skipped .substep-description {
-            color: var(--text-muted);
+            color: var(--gray-med);
         }
 
         .substep-status {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            flex-shrink: 0;
         }
 
         .status-badge {
             padding: 0.25rem 0.75rem;
             border-radius: 20px;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.025em;
         }
 
         .status-badge.pending {
-            background: rgba(100, 116, 139, 0.1);
-            color: var(--text-muted);
+            background: #f1f5f9;
+            color: var(--gray-med);
         }
 
         .status-badge.active {
-            background: rgba(99, 102, 241, 0.2);
-            color: var(--primary);
+            background: #dbeafe;
+            color: var(--blue);
         }
 
         .status-badge.completed {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success);
+            background: #dcfce7;
+            color: var(--green);
         }
 
         .status-badge.error {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--error);
+            background: #fee2e2;
+            color: var(--red);
         }
 
         .status-badge.skipped {
@@ -505,96 +724,117 @@
             color: var(--skip);
         }
 
-        .substep-time {
-            color: var(--text-muted);
-            font-size: 0.7rem;
-            margin-left: 0.5rem;
+        /* Webhook Status */
+        .webhook-status {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            display: none;
+            border: 1px solid #e2e8f0;
         }
 
-        .analysis-complete-section {
+        .webhook-status.success {
+            background: #ecfdf5;
+            border-color: #bbf7d0;
+            color: #059669;
+        }
+
+        .webhook-status.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
+        .webhook-status.info {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #2563eb;
+        }
+
+        /* Results Section */
+        .results-section {
             display: none;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 2.5rem;
-            margin-bottom: 3rem;
+            background: var(--cream);
+            padding: 4rem 0;
+        }
+
+        .results-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
         }
 
         .analyzed-url {
+            background: var(--white);
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 3rem;
             display: flex;
             align-items: center;
             gap: 1rem;
-            padding: 1rem 1.5rem;
-            background: var(--surface);
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            border: 1px solid var(--border);
         }
 
         .analyzed-url-icon {
             font-size: 1.5rem;
+            color: var(--teal);
         }
 
         .analyzed-url-content {
             flex: 1;
-            min-width: 0;
         }
 
         .analyzed-url-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-med);
             text-transform: uppercase;
-            letter-spacing: 0.025em;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
         }
 
         .analyzed-url-text {
-            font-weight: 500;
-            word-break: break-all;
-            color: var(--text-primary);
-        }
-
-        .analysis-output-btn {
-            background: linear-gradient(135deg, var(--success), #059669);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 12px;
             font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            transform: translateY(0);
-            margin-top: 2rem;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            color: var(--teal-dark);
+            word-break: break-all;
         }
 
-        .analysis-output-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        .results-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .results-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--teal-dark);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .results-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-dark);
         }
 
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
         }
 
         .result-card {
-            background: var(--surface);
+            background: var(--white);
+            border: 1px solid #e2e8f0;
             border-radius: 16px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
+            padding: 2rem;
+            transition: all 0.2s;
         }
 
         .result-card:hover {
-            background: var(--surface-light);
+            border-color: var(--teal);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
         }
 
@@ -606,271 +846,328 @@
         }
 
         .result-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--primary);
-            color: white;
+            background: var(--teal);
+            color: var(--white);
+            font-size: 1.5rem;
         }
 
         .result-title {
-            font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--teal-dark);
+        }
+
+        .result-description {
+            color: var(--gray-dark);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
         }
 
         .download-btn {
+            background: var(--teal);
+            color: var(--white);
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: var(--success);
-            color: white;
-            text-decoration: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
         }
 
         .download-btn:hover {
-            background: #059669;
-            transform: translateY(-1px);
+            background: var(--teal-dark);
         }
 
-        .webhook-status {
-            margin-top: 1rem;
-            padding: 1rem;
+        .view-results-btn {
+            background: var(--teal);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border: none;
             border-radius: 8px;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+            margin-top: 2rem;
+            display: none;
         }
 
-        .webhook-status.success {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: var(--success);
+        .view-results-btn:hover {
+            background: var(--teal-dark);
         }
 
-        .webhook-status.error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: var(--error);
-        }
-
-        .webhook-status.info {
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            color: var(--primary);
-        }
-
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-muted);
-        }
-
-        .status-dot.active {
-            background: var(--primary);
-            animation: pulse-dot 2s infinite;
-        }
-
-        .status-dot.completed {
-            background: var(--success);
-        }
-
-        .status-dot.error {
-            background: var(--error);
-        }
-
-        .status-dot.skipped {
-            background: var(--skip);
-        }
-
+        /* Animations */
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
 
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.2); }
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+                text-align: center;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .slide-in {
-            animation: slideIn 0.5s ease-out;
-        }
-
-        .floating-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .particle {
-            position: absolute;
-            background: var(--primary);
-            border-radius: 50%;
-            opacity: 0.1;
-            animation: float 15s infinite linear;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(100vh) rotate(0deg);
-            }
-            100% {
-                transform: translateY(-100px) rotate(360deg);
+            
+            .terminal-window {
+                order: -1;
+                max-width: 600px;
+                margin: 0 auto;
             }
         }
 
         @media (max-width: 768px) {
-            .dashboard {
-                padding: 1rem;
+            .hero-inner,
+            .input-inner,
+            .progress-inner,
+            .results-inner {
+                padding: 0 1rem;
             }
             
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .input-group {
+            .url-form {
                 flex-direction: column;
                 align-items: stretch;
             }
             
-            .options {
+            .progress-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .execution-info {
+                text-align: left;
+            }
+            
+            .options-grid {
                 grid-template-columns: 1fr;
             }
-
-            .execution-info {
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .step-header {
                 align-items: flex-start;
             }
+        }
 
-            .connection-status {
-                position: relative;
-                top: auto;
-                right: auto;
-                margin-bottom: 1rem;
+        @media (max-width: 480px) {
+            .input-card {
+                padding: 2rem;
+            }
+            
+            .step {
+                padding: 1.5rem;
+            }
+            
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .progress-title,
+            .results-title {
+                font-size: 2rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="floating-particles" id="particles"></div>
-    
-    <!-- Connection Status Indicator -->
-    <div class="connection-status connecting" id="connection-status">
-        🔄 Connecting to real-time updates...
-    </div>
-    
-    <div class="dashboard">
-        <div class="header">
-            <h1>PDP Analysis Dashboard</h1>
-            <p>Real-time Product Detail Page analysis with live n8n workflow tracking</p>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">PDP Analysis</div>
+            <div class="connection-status connecting" id="connection-status">
+                <div class="status-dot"></div>
+                Connecting...
+            </div>
         </div>
+    </header>
 
-        <div class="url-input-section slide-in">
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <label for="url-input">Product URL</label>
-                    <input type="url" id="url-input" placeholder="https://www.walmart.com/ip/product-name/123456789" />
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-inner">
+                <div class="hero-content">
+                    <h1>Transform Product Pages into Strategic Insights</h1>
+                    <p>Real-time workflow tracking and comprehensive analysis powered by advanced AI for strategic brand positioning.</p>
+                    <button class="hero-cta" onclick="document.querySelector('.input-section').scrollIntoView({behavior: 'smooth'})">
+                        Start Analysis
+                    </button>
                 </div>
-                <button class="analyze-btn" id="analyze-btn">
-                    🚀 Start Analysis
+                
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                        <div class="terminal-title">pdp-analysis-dashboard</div>
+                    </div>
+                    <div class="terminal-content" id="terminal-content">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span> pdp-analysis --init
+                        </div>
+                        <div class="terminal-line terminal-success">
+                            ✓ Initializing PDP Analysis Dashboard...
+                        </div>
+                        <div class="terminal-line terminal-success">
+                            ✓ Connected to real-time tracking system
+                        </div>
+                        <div class="terminal-line terminal-success">
+                            ✓ AI workflow engine ready
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">$</span> Ready for product URL analysis
+                        </div>
+                        <div class="terminal-line typing-cursor" id="terminal-cursor">
+                            <span class="terminal-prompt">$</span> <span id="terminal-typing"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Input Section -->
+        <section class="input-section">
+            <div class="input-inner">
+                <div class="input-card">
+                    <div class="input-header">
+                        <h2>Start PDP Analysis</h2>
+                        <p>Enter your product URL and configure analysis options</p>
+                    </div>
+
+                    <div class="url-form">
+                        <div class="url-input-group">
+                            <label class="url-label" for="url-input">Product URL</label>
+                            <input type="url" id="url-input" class="url-input" 
+                                   placeholder="https://www.walmart.com/ip/product-name/123456789" />
+                        </div>
+                        <button class="analyze-btn" id="analyze-btn">
+                            Start Analysis
+                        </button>
+                    </div>
+
+                    <div class="options-container">
+                        <div class="option-group">
+                            <h3>PDP Content Analysis</h3>
+                            <p>Select which sections of the Product Detail Page to analyze</p>
+                            <div class="options-grid">
+                                <div class="option">
+                                    <input type="checkbox" id="base-content" checked />
+                                    <label for="base-content">Base Content Analysis</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" id="premium-content" checked />
+                                    <label for="premium-content">From Brand Content</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" id="from-manufacturer" checked />
+                                    <label for="from-manufacturer">From Manufacturer Content</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" id="video-content" checked />
+                                    <label for="video-content">Video Analysis</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" id="gallery-images" checked />
+                                    <label for="gallery-images">Gallery Images</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="option-group">
+                            <h3>Strategic Analytics</h3>
+                            <p>Advanced brand perception and strategic positioning analysis</p>
+                            <div class="options-grid">
+                                <div class="option">
+                                    <input type="checkbox" id="brand-perception" checked />
+                                    <label for="brand-perception">Brand Perception Evaluation</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section class="progress-section" id="progress-section">
+            <div class="progress-inner">
+                <div class="progress-header">
+                    <h2 class="progress-title">Analysis in Progress</h2>
+                    <div class="execution-info">
+                        <div class="elapsed-time" id="elapsed-time">00:00</div>
+                        <div class="execution-id" id="execution-id-display">ID: </div>
+                    </div>
+                </div>
+                
+                <div class="overall-progress">
+                    <div class="overall-progress-fill" id="overall-progress"></div>
+                </div>
+
+                <div class="steps-container" id="progress-steps">
+                    <!-- Steps will be populated dynamically -->
+                </div>
+
+                <div id="webhook-status" class="webhook-status"></div>
+
+                <button class="view-results-btn" id="analysis-output-btn">
+                    View Analysis Results
                 </button>
             </div>
+        </section>
 
-            <div class="options">
-                <div class="option">
-                    <input type="checkbox" id="base-content" checked />
-                    <label for="base-content">Base Content Analysis</label>
+        <!-- Results Section -->
+        <section class="results-section" id="results-section">
+            <div class="results-inner">
+                <div class="analyzed-url" id="analyzed-url">
+                    <div class="analyzed-url-icon">🔗</div>
+                    <div class="analyzed-url-content">
+                        <div class="analyzed-url-label">Analyzed URL</div>
+                        <div class="analyzed-url-text" id="analyzed-url-text"><!-- URL will be populated --></div>
+                    </div>
                 </div>
-                <div class="option">
-                    <input type="checkbox" id="premium-content" checked />
-                    <label for="premium-content">From Brand Content</label>
+                
+                <div class="results-header">
+                    <h2 class="results-title">Analysis Complete</h2>
+                    <p class="results-subtitle">Your comprehensive PDP analysis results are ready for download</p>
                 </div>
-                <div class="option">
-                    <input type="checkbox" id="from-manufacturer" checked />
-                    <label for="from-manufacturer">From Manufacturer Content</label>
-                </div>
-                <div class="option">
-                    <input type="checkbox" id="brand-perception" checked />
-                    <label for="brand-perception">Brand Perception Evaluation</label>
-                </div>
-                <div class="option">
-                    <input type="checkbox" id="video-content" checked />
-                    <label for="video-content">Video Analysis</label>
-                </div>
-                <div class="option">
-                    <input type="checkbox" id="gallery-images" checked />
-                    <label for="gallery-images">Gallery Images</label>
+                
+                <div class="results-grid" id="results-grid">
+                    <!-- Results will be populated dynamically -->
                 </div>
             </div>
-        </div>
-
-        <div class="progress-section" id="progress-section">
-            <div class="progress-header">
-                <h2 class="progress-title">Analysis in Progress...</h2>
-                <div class="execution-info">
-                    <div class="step-time" id="elapsed-time">00:00</div>
-                    <div class="execution-id" id="execution-id-display">ID: </div>
-                </div>
-            </div>
-            
-            <div class="overall-progress">
-                <div class="overall-progress-fill" id="overall-progress"></div>
-            </div>
-
-            <div class="progress-steps" id="progress-steps">
-                <!-- Steps will be populated dynamically -->
-            </div>
-
-            <div id="webhook-status" class="webhook-status" style="display: none;"></div>
-
-            <button class="analysis-output-btn" id="analysis-output-btn" style="display: none;">
-                📊 View Analysis Output
-            </button>
-        </div>
-
-        <div class="analysis-complete-section" id="analysis-complete-section">
-            <div class="analyzed-url" id="analyzed-url">
-                <div class="analyzed-url-icon">🔗</div>
-                <div class="analyzed-url-content">
-                    <div class="analyzed-url-label">Analyzed URL</div>
-                    <div class="analyzed-url-text" id="analyzed-url-text"><!-- URL will be populated --></div>
-                </div>
-            </div>
-            
-            <h2>Analysis Complete! 🎉</h2>
-            <div class="results-grid" id="results-grid">
-                <!-- Results will be populated dynamically -->
-            </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
@@ -979,10 +1276,26 @@
             }
 
             async init() {
-                this.createFloatingParticles();
                 this.bindEvents();
                 await this.initializeSupabase();
                 this.setupStatusListener();
+                this.startTerminalAnimation();
+            }
+
+            startTerminalAnimation() {
+                const texts = [
+                    'analyzing product data...',
+                    'processing brand perception...',
+                    'extracting visual insights...',
+                    'generating reports...'
+                ];
+                let currentIndex = 0;
+
+                setInterval(() => {
+                    const typingElement = document.getElementById('terminal-typing');
+                    typingElement.textContent = texts[currentIndex];
+                    currentIndex = (currentIndex + 1) % texts.length;
+                }, 3000);
             }
 
             async initializeSupabase() {
@@ -991,37 +1304,18 @@
                 
                 try {
                     this.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    this.updateConnectionStatus('connected', '🟢 Real-time connected');
+                    this.updateConnectionStatus('connected', 'Connected');
                     console.log('Supabase client initialized successfully');
                 } catch (error) {
                     console.error('Failed to initialize Supabase:', error);
-                    this.updateConnectionStatus('disconnected', '🔴 Real-time disconnected');
+                    this.updateConnectionStatus('disconnected', 'Disconnected');
                 }
             }
 
             updateConnectionStatus(status, message) {
                 const statusElement = document.getElementById('connection-status');
                 statusElement.className = `connection-status ${status}`;
-                statusElement.textContent = message;
-                
-                if (status === 'connected') {
-                    setTimeout(() => {
-                        statusElement.style.display = 'none';
-                    }, 3000);
-                }
-            }
-
-            createFloatingParticles() {
-                const particlesContainer = document.getElementById('particles');
-                for (let i = 0; i < 20; i++) {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    particle.style.left = Math.random() * 100 + '%';
-                    particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
-                    particle.style.animationDelay = Math.random() * 15 + 's';
-                    particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
-                    particlesContainer.appendChild(particle);
-                }
+                statusElement.innerHTML = `<div class="status-dot"></div>${message}`;
             }
 
             bindEvents() {
@@ -1087,9 +1381,9 @@
             }
 
             showProgressSection() {
-                document.querySelector('.url-input-section').style.display = 'none';
+                document.querySelector('.input-section').style.display = 'none';
                 document.getElementById('progress-section').style.display = 'block';
-                document.getElementById('progress-section').classList.add('slide-in');
+                document.getElementById('progress-section').scrollIntoView({ behavior: 'smooth' });
                 
                 document.getElementById('execution-id-display').textContent = `ID: ${this.executionId}`;
             }
@@ -1137,14 +1431,10 @@
                                         <div class="${substepClass}" id="substep-${substep.id}">
                                             <div class="substep-left">
                                                 <div class="substep-icon ${substepSkipped ? 'skipped' : ''}">${substep.icon}</div>
-                                                <div class="substep-content">
-                                                    <div class="substep-title">${substep.title}</div>
-                                                    <div class="substep-description">${substep.description}</div>
-                                                </div>
+                                                <div class="substep-title">${substep.title}</div>
                                             </div>
                                             <div class="substep-status">
                                                 <div class="${statusClass}" id="status-${substep.id}">${statusText}</div>
-                                                <div class="substep-time" id="time-${substep.id}"></div>
                                             </div>
                                         </div>
                                     `;
@@ -1155,7 +1445,7 @@
                     
                     const stepStatus = stepSkipped ? 'Skipped' : 'Waiting...';
                     const iconClass = stepSkipped ? 'step-icon skipped' : 'step-icon pending';
-                    const dotClass = stepSkipped ? 'status-dot skipped' : 'status-dot';
+                    const dotClass = stepSkipped ? 'step-status-dot skipped' : 'step-status-dot';
                     
                     if (stepSkipped) {
                         this.skippedSteps.add(step.id);
@@ -1166,12 +1456,12 @@
                             <div class="${iconClass}">
                                 ${step.icon}
                             </div>
-                            <div class="step-main-content">
+                            <div class="step-content">
                                 <div class="step-title">${step.title}</div>
                                 <div class="step-description">${step.description}</div>
-                                <div class="status-indicator">
+                                <div class="step-status">
                                     <div class="${dotClass}" id="dot-${step.id}"></div>
-                                    <span id="status-text-${step.id}">${stepStatus}</span>
+                                    <span class="step-status-text" id="status-text-${step.id}">${stepStatus}</span>
                                 </div>
                             </div>
                             <div class="step-time"></div>
@@ -1195,7 +1485,7 @@
                 statusElement.style.display = 'block';
                 statusElement.className = 'webhook-status info';
                 statusElement.innerHTML = `
-                    🔄 Sending request to n8n workflow...<br>
+                    Sending request to n8n workflow...<br>
                     <small>Execution ID: ${this.executionId}</small>
                 `;
 
@@ -1214,7 +1504,7 @@
                         const result = await response.json();
                         statusElement.className = 'webhook-status success';
                         statusElement.innerHTML = `
-                            ✅ n8n workflow started successfully! Tracking real-time progress...<br>
+                            n8n workflow started successfully! Tracking real-time progress...<br>
                             <small>Execution ID: ${this.executionId}</small>
                         `;
                         
@@ -1232,7 +1522,7 @@
                     console.error('Webhook error:', error);
                     statusElement.className = 'webhook-status error';
                     statusElement.innerHTML = `
-                        ❌ Error: ${error.message}<br>
+                        Error: ${error.message}<br>
                         <small>Falling back to simulation mode...</small>
                     `;
                     
@@ -1269,10 +1559,10 @@
                         .subscribe((status) => {
                             if (status === 'SUBSCRIBED') {
                                 console.log('Successfully subscribed to real-time updates');
-                                this.updateConnectionStatus('connected', '🟢 Live tracking active');
+                                this.updateConnectionStatus('connected', 'Live tracking active');
                             } else if (status === 'CHANNEL_ERROR') {
                                 console.error('Real-time subscription error');
-                                this.updateConnectionStatus('disconnected', '🔴 Real-time error');
+                                this.updateConnectionStatus('disconnected', 'Real-time error');
                                 this.simulateProgressTracking();
                             }
                         });
@@ -1286,7 +1576,7 @@
 
                 } catch (error) {
                     console.error('Failed to start real-time tracking:', error);
-                    this.updateConnectionStatus('disconnected', '🔴 Real-time failed');
+                    this.updateConnectionStatus('disconnected', 'Real-time failed');
                     await this.simulateProgressTracking();
                     this.showResults();
                 }
@@ -1330,7 +1620,7 @@
                     'file_sharing': 'file-sharing',
                     'current_analysis': 'current-analysis',
                     'current-analysis': 'current-analysis',
-                    'content': 'content-scraping' // Current example from database
+                    'content': 'content-scraping'
                 };
                 
                 return stepMapping[dbStepId] || dbStepId;
@@ -1381,10 +1671,7 @@
                 const statusElement = document.getElementById('webhook-status');
                 statusElement.className = 'webhook-status info';
                 statusElement.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <div class="status-dot active"></div>
-                        <span>Live: ${message || `${step_id} ${status}`}</span>
-                    </div>
+                    Live: ${message || `${step_id} ${status}`}<br>
                     <small>Execution ID: ${this.executionId} • ${new Date().toLocaleTimeString()}</small>
                 `;
 
@@ -1405,7 +1692,7 @@
                     const icon = stepElement.querySelector('.step-icon');
                     icon.className = `step-icon ${status}`;
                     
-                    dotElement.className = `status-dot ${status}`;
+                    dotElement.className = `step-status-dot ${status}`;
                     statusTextElement.textContent = message || this.getStatusText(status);
                     
                     const timeElement = stepElement.querySelector('.step-time');
@@ -1422,15 +1709,12 @@
                 if (substepElement) {
                     const substepIcon = substepElement.querySelector('.substep-icon');
                     const statusBadge = document.getElementById(`status-${substepId}`);
-                    const timeElement = document.getElementById(`time-${substepId}`);
                     
                     substepElement.className = `substep ${status}`;
                     substepIcon.className = `substep-icon ${status}`;
                     
                     statusBadge.textContent = this.getStatusText(status);
                     statusBadge.className = `status-badge ${status}`;
-                    
-                    timeElement.textContent = this.formatElapsedTime();
                     
                     if (status === 'completed') {
                         this.completedSteps.add(substepId);
@@ -1449,11 +1733,11 @@
 
             getStatusText(status) {
                 switch (status) {
-                    case 'active': return 'Processing...';
+                    case 'active': return 'Processing';
                     case 'completed': return 'Completed';
-                    case 'error': return 'Error occurred';
+                    case 'error': return 'Error';
                     case 'skipped': return 'Skipped';
-                    default: return 'Waiting...';
+                    default: return 'Waiting';
                 }
             }
 
@@ -1466,7 +1750,7 @@
                 const statusElement = document.getElementById('webhook-status');
                 statusElement.className = 'webhook-status success';
                 statusElement.innerHTML = `
-                    🎉 Analysis completed successfully!<br>
+                    Analysis completed successfully!<br>
                     <small>Execution ID: ${this.executionId} • Analysis finished at ${new Date().toLocaleTimeString()}</small>
                 `;
 
@@ -1474,7 +1758,7 @@
                 const progressTitle = document.querySelector('.progress-title');
                 progressTitle.textContent = 'Analysis Complete! 🎉';
 
-                this.updateConnectionStatus('connected', '🟢 Analysis complete');
+                this.updateConnectionStatus('connected', 'Analysis complete');
                 this.showResults();
             }
 
@@ -1559,13 +1843,13 @@
 
             showResults() {
                 clearInterval(this.timerInterval);
-                document.getElementById('analysis-output-btn').style.display = 'flex';
+                document.getElementById('analysis-output-btn').style.display = 'block';
             }
 
             showAnalysisOutput() {
                 document.getElementById('progress-section').style.display = 'none';
-                document.getElementById('analysis-complete-section').style.display = 'block';
-                document.getElementById('analysis-complete-section').classList.add('slide-in');
+                document.getElementById('results-section').style.display = 'block';
+                document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
                 
                 document.getElementById('analyzed-url-text').textContent = this.analyzedUrl;
                 
@@ -1619,9 +1903,9 @@
                             <div class="result-icon">${result.icon}</div>
                             <div class="result-title">${result.title}</div>
                         </div>
-                        <p class="step-description">${result.description}</p>
+                        <p class="result-description">${result.description}</p>
                         <a href="${result.downloadUrl}" class="download-btn">
-                            📥 Download
+                            Download
                         </a>
                     `;
                     
@@ -1639,9 +1923,9 @@
                 const statusElement = document.getElementById('webhook-status');
                 statusElement.style.display = 'block';
                 statusElement.className = 'webhook-status error';
-                statusElement.textContent = `❌ Error: ${message}`;
+                statusElement.textContent = `Error: ${message}`;
                 
-                this.updateConnectionStatus('disconnected', '🔴 Connection error');
+                this.updateConnectionStatus('disconnected', 'Connection error');
             }
         }
 
